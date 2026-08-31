@@ -6,9 +6,9 @@ hasilnya dapat digunakan untuk mempermudah pengguna untuk membaca data
 chat dari pdf
 
 # How to build in Github Action
-## Coming Soon
+* Coming Soon
 
-Teknologi yang digunakan
+# Teknologi yang digunakan
 1. EventBus
 2. Android Default (Service, Application)
 3. Jraska Console
