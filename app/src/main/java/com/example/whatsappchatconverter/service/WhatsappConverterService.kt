@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
@@ -74,7 +75,7 @@ class WhatsappConverterService : Service() {
 
                                 val entrySize = entry.size
                                 var bytesRead = 0L
-                                val milestones = listOf(10, 25, 50, 75, 100)
+                                val milestones = listOf(0, 25, 50, 75, 100)
                                 var milestonesIndex = 0
 
                                 Timber.i("Get Bytes of File at %s bytes", entrySize)
@@ -136,7 +137,7 @@ class WhatsappConverterService : Service() {
                     val contentValues = ContentValues().apply {
                         put(
                             MediaStore.MediaColumns.DISPLAY_NAME,
-                            "hasil_convert_${durationTime}.pdf"
+                            "Counseling Result ${durationTime}.pdf"
                         )
                         put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
                         put(
@@ -151,7 +152,7 @@ class WhatsappConverterService : Service() {
                         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                         "neurokarsa folder"
                     ).apply { mkdirs() }
-                    val destFile = File(outputDir, "hasil_convert_${durationTime}.pdf")
+                    val destFile = File(outputDir, "Counseling Result ${durationTime}.pdf")
                     Uri.fromFile(destFile)
                 }
 
@@ -167,10 +168,10 @@ class WhatsappConverterService : Service() {
                     contentResolver.update(uri, contentValues, null, null)
                 }
 
-                Timber.i("PDF has successfully created. You have see at %s", getPath(uri))
+                Timber.i("PDF has successfully created. You have to see at %s", getPath(uri))
 
                 withContext(Dispatchers.Main) {
-                    EventBus.getDefault().post(ConverterStatusEvent(true))
+                    EventBus.getDefault().post(ConverterStatusEvent(true, uri))
                 }
                 pdfDocument.close()
                 isClosed = true
@@ -178,7 +179,7 @@ class WhatsappConverterService : Service() {
                 Timber.e("PDF can't created %s", e)
                 withContext(Dispatchers.Main) {
                     if (!isClosed)
-                        EventBus.getDefault().post(ConverterStatusEvent(false))
+                        EventBus.getDefault().post(ConverterStatusEvent(false, null))
                 }
             } finally {
                 pdfDocument.close()

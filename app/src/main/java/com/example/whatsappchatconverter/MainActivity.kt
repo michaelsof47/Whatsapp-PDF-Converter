@@ -55,9 +55,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnConvert.setOnClickListener {
             if (binding.tietUrlFile.text!!.isNotEmpty()) {
-                val intent = Intent(this, WhatsappConverterService::class.java)
-                intent.putExtra("file_zip", selectedZipUri)
-                intent.addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+                val intent = Intent(this, WhatsappConverterService::class.java).apply {
+                    putExtra("file_zip", selectedZipUri)
+                    addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+                }
                 startService(intent)
             } else {
                 Toast.makeText(this, "Please select a file", Toast.LENGTH_SHORT).show()
@@ -83,6 +84,19 @@ class MainActivity : AppCompatActivity() {
             binding.btnShare.visibility = View.VISIBLE
         } else {
             binding.btnShare.visibility = View.GONE
+        }
+
+        binding.btnShare.setOnClickListener {
+            if(event.uri != null) {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "application/pdf"
+                    putExtra(Intent.EXTRA_STREAM, event.uri)
+                    addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(intent, "Share PDF Via"))
+            } else {
+                Toast.makeText(this, "PDF is Empty. It can't shared", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
