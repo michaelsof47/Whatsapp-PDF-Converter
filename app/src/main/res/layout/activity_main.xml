@@ -23,6 +23,7 @@
             android:enabled="false"
             android:background="@color/black"
             android:textColor="@color/white"
+            android:singleLine="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/btn_search"
             app:layout_constraintStart_toStartOf="parent"

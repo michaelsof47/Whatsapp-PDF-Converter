@@ -3,6 +3,7 @@ package com.example.whatsappchatconverter.service
 import android.app.Service
 import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Color
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -12,6 +13,8 @@ import android.os.IBinder
 import android.provider.MediaStore
 import android.text.TextPaint
 import com.example.whatsappchatconverter.event.ConverterStatusEvent
+import com.example.whatsappchatconverter.helper.NotificationHelper
+import com.example.whatsappchatconverter.model.DataFileModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,20 +40,40 @@ class WhatsappConverterService : Service() {
     private var serviceJob = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var pdfDocument = PdfDocument()
     private var isClosed = false
+    private val notificationHelper = NotificationHelper.getInstance()
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        notificationHelper.createNotification(this)
+
+        val notification = notificationHelper.buildNotification(this@WhatsappConverterService, "Preparing whatsapp chat will be extract...")
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(notificationHelper.notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            startForeground(notificationHelper.notificationId, notification)
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Timber.i("Do Start Convert at %s", durationTime)
+        val filename = intent!!.getStringExtra("filename_url").toString()
+        val uri = intent.getParcelableExtra<Uri>("file_zip")
+
+        notificationHelper.updateNotification(this@WhatsappConverterService, "whatsapp chat will be extract...",
+            DataFileModel(filename, 0))
+
         serviceJob.launch {
-            doExtractZipAndConvert(intent!!.getParcelableExtra<Uri>("file_zip")!!)
+            doExtractZipAndConvert(uri!!, filename)
         }
         return START_NOT_STICKY
     }
 
-    private suspend fun doExtractZipAndConvert(uri: Uri) {
+    private suspend fun doExtractZipAndConvert(uri: Uri, filename: String) {
         val pageWidth = 595
         val pageHeight = 842
         val margin = 40f
@@ -73,15 +96,18 @@ class WhatsappConverterService : Service() {
                                 var page = pdfDocument.startPage(pageInfo)
                                 var canvas = page.canvas
 
-                                val entrySize = entry.size
                                 var bytesRead = 0L
                                 val milestones = listOf(0, 25, 50, 75, 100)
                                 var milestonesIndex = 0
 
-                                Timber.i("Get Bytes of File at %s bytes", entrySize)
-
                                 BufferedReader(InputStreamReader(zis)).useLines { lines ->
-                                    lines.forEach { line ->
+
+                                    // Collect each line as list. After then, it get count to help calculate of progress
+                                    val allLines = lines.toList()
+                                    val totalLines = allLines.size
+                                    var lineCount = 0
+
+                                    allLines.forEach { line ->
                                         // Convert bytes into canvas
                                         if (currentY + lineHeight > pageHeight + margin) {
                                             pdfDocument.finishPage(page)
@@ -106,21 +132,25 @@ class WhatsappConverterService : Service() {
                                                 textSize = 12f
                                             })
                                         currentY += lineHeight
-
                                         bytesRead += line.toByteArray().size + 1
-                                        if (entrySize > 0) {
-                                            val progress =
-                                                (bytesRead * 100 / entrySize).toInt()
-                                                    .coerceIn(0, 100)
+                                        lineCount++
 
-                                            while (milestonesIndex < milestones.size && progress >= milestones[milestonesIndex]) {
-                                                Timber.i(
-                                                    "Convert Progress %s from 100",
-                                                    milestones[milestonesIndex]
-                                                )
-                                                milestonesIndex++
-                                            }
+                                        val progress =
+                                            (lineCount * 100 / totalLines).toInt()
+                                                .coerceIn(0, 100)
+
+                                        while (milestonesIndex < milestones.size && progress >= milestones[milestonesIndex]) {
+                                            Timber.i(
+                                                "Convert Progress %s from 100",
+                                                milestones[milestonesIndex]
+                                            )
+                                            notificationHelper.updateNotification(
+                                                this@WhatsappConverterService,
+                                                 if(progress == 100) "PDF has succesfully converted" else "Convert Progress ${milestones[milestonesIndex]} from 100",
+                                                DataFileModel(filename, milestones[milestonesIndex]))
+                                            milestonesIndex++
                                         }
+                                        delay(300)
                                     }
                                 }
 

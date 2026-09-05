@@ -1,17 +1,22 @@
 package com.example.whatsappchatconverter
 
+import android.Manifest
+import android.app.ComponentCaller
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import com.example.whatsappchatconverter.databinding.ActivityMainBinding
 import com.example.whatsappchatconverter.event.ConverterStatusEvent
+import com.example.whatsappchatconverter.model.DataFileModel
 import com.example.whatsappchatconverter.service.WhatsappConverterService
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -22,13 +27,15 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var selectedZipUri: Uri
+    private lateinit var filename: String
 
     private val selectFile =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri.let {
                 selectedZipUri = it!!
-                val fileName = getFileNameFromUri(this, it)
-                binding.tietUrlFile.setText(fileName)
+                val _filename = getFileNameFromUri(this, it)
+                filename = _filename
+                binding.tietUrlFile.setText(_filename)
             }
         }
 
@@ -37,12 +44,24 @@ class MainActivity : AppCompatActivity() {
         if (!EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().register(this)
         }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                101
+            )
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        if(intent != null) {
+            openNotification(intent)
+        }
 
         binding.btnSearch.setOnClickListener {
             selectFile.launch(
@@ -57,9 +76,14 @@ class MainActivity : AppCompatActivity() {
             if (binding.tietUrlFile.text!!.isNotEmpty()) {
                 val intent = Intent(this, WhatsappConverterService::class.java).apply {
                     putExtra("file_zip", selectedZipUri)
+                    putExtra("filename_url", filename)
                     addFlags(FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                startService(intent)
+
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                    startForegroundService(intent)
+                else
+                    startService(intent)
             } else {
                 Toast.makeText(this, "Please select a file", Toast.LENGTH_SHORT).show()
             }
@@ -98,6 +122,16 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "PDF is Empty. It can't shared", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    fun openNotification(intent: Intent) {
+        if(intent.getIntExtra("progress", 0) == 100) {
+            binding.btnShare.visibility = View.VISIBLE
+        } else {
+            binding.btnShare.visibility = View.GONE
+        }
+
+        binding.tietUrlFile.setText(intent.getStringExtra("filename_uri"))
     }
 
     override fun onDestroy() {
