@@ -210,6 +210,10 @@ class WhatsappConverterService : Service() {
                 withContext(Dispatchers.Main) {
                     if (!isClosed)
                         EventBus.getDefault().post(ConverterStatusEvent(false, null))
+                    else {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
                 }
             } finally {
                 pdfDocument.close()

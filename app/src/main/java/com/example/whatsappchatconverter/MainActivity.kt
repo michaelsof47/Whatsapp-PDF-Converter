@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         if(intent != null) {
-            openNotification(intent)
+            startAppsWithData(intent)
         }
 
         binding.btnSearch.setOnClickListener {
@@ -124,14 +124,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun openNotification(intent: Intent) {
-        if(intent.getIntExtra("progress", 0) == 100) {
-            binding.btnShare.visibility = View.VISIBLE
-        } else {
-            binding.btnShare.visibility = View.GONE
-        }
+    fun startAppsWithData(intent: Intent) {
+        if(intent.action == Intent.ACTION_SEND) {
+            val uri = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
 
-        binding.tietUrlFile.setText(intent.getStringExtra("filename_uri"))
+            selectedZipUri = uri!!
+            filename = getFileNameFromUri(this@MainActivity, uri)
+            binding.tietUrlFile.setText(filename)
+        } else {
+            if(intent.getIntExtra("progress", 0) == 100) {
+                binding.btnShare.visibility = View.VISIBLE
+            } else {
+                binding.btnShare.visibility = View.GONE
+            }
+
+            binding.tietUrlFile.setText(intent.getStringExtra("filename_uri"))
+        }
     }
 
     override fun onDestroy() {
