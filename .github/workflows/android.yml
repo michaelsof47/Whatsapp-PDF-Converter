@@ -29,7 +29,7 @@ jobs:
           load: true
           push: false
           tags: ${{ env.Image }}
-          build-args:
+          build-args: |
             GRADLE_VERSION=${{ env.GRADLE_VERSION }}
             ANDROID_PLATFORM=${{ env.ANDROID_PLATFORM }}
             BUILD_TOOLS=${{ env.BUILD_TOOLS }}
