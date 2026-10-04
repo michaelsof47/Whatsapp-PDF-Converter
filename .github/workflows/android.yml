@@ -86,7 +86,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run : |
           docker run --rm \
-            -v "$GITHUB_WORKSPACE":/project \
+            -v "$GITHUB_WORKSPACE":/whatsapp-chat-converter \
             -v "$HOME/.gradle":/root/.gradle \
             -v "$RUNNER_TEMP/release.jks":/keystore/release.jks:ro \
             -e KEYSTORE_PATH=/keystore/release.jks \
