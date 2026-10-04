@@ -47,7 +47,7 @@ jobs:
         run : |
           mkdir -p ~/.gradle
           docker run --rm \
-            -v "$GITHUB_WORKSPACE":/project \
+            -v "$GITHUB_WORKSPACE":/whatsapp-chat-converter \
             -v "$HOME/.gradle":/root/.gradle \
             ${{ env.IMAGE }} \
             gradle lintDebug testDebugUnitTest assembleDebug --no-daemon --stacktrace
