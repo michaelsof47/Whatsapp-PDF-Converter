@@ -25,26 +25,26 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: whatsapp-chat.Dockerfile
-          load: true
-          push: false
-          tags: ${{ env.Image }}
+          file      : whatsapp-chat.Dockerfile
+          load      : true
+          push      : false
+          tags      : ${{ env.IMAGE }}
           build-args: |
             GRADLE_VERSION=${{ env.GRADLE_VERSION }}
             ANDROID_PLATFORM=${{ env.ANDROID_PLATFORM }}
             BUILD_TOOLS=${{ env.BUILD_TOOLS }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-to  : type=gha,mode=max
       
       - name: Gradle cache
         uses: actions/cache@v4
         with:
-          path: ~/.Gradle
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml', '**/gradle.properties') }}
+          path        : ~/.Gradle
+          key         : gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml', '**/gradle.properties') }}
           restore-keys: gradle-${{ runner.os }}-
       
       - name: Lint, test, & build debug
-        run: |
+        run : |
           mkdir -p ~/.gradle
           docker run --rm \
             -v "$GITHUB_WORKSPACE":/project \
@@ -53,7 +53,7 @@ jobs:
             gradle lintDebug testDebugUnitTest assembleDebug --no-daemon --stacktrace
       
       - name: Upload Reports (on failure)
-        if: failure()
+        if  : failure()
         uses: actions/upload-artifact@v4
         with:
           name: reports
@@ -63,16 +63,16 @@ jobs:
       
       # Release Version
       - name: Decode Keystore
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+        if  : startsWith(github.ref, 'refs/tags/v')
+        run : echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Build signed APK & AAB
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
+        if  : startsWith(github.ref, 'refs/tags/v')
+        env :
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
+        run : |
           docker run --rm \
             -v "$GITHUB_WORKSPACE":/project \
             -v "$HOME/.gradle":/root/.gradle \
@@ -85,7 +85,7 @@ jobs:
             gradle bundleRelease assembleRelease --no-daemon --stacktrace
 
       - name: Upload release artifacts
-        if: startsWith(github.ref, 'refs/tags/v')
+        if  : startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: app-release
@@ -94,7 +94,7 @@ jobs:
             app/build/outputs/bundle/release/*.aab
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if  : startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
