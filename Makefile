@@ -1,4 +1,4 @@
-IMAGE 		   		?= android-builder:local
+IMAGE 		   		?= whatsapp-chat:local
 DOCKERFILE      	?= whatsapp-chat.Dockerfile
 GRADLE_VERSION 		?= 9.5.0
 ANDROID_PLATFORM 	?= 37.0
