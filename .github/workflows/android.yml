@@ -11,7 +11,7 @@ on:
 env:
   IMAGE: whatsapp-chat:ci
   GRADLE_VERSION: "9.5.0"
-  ANDROID_PLATFORM: "37"
+  ANDROID_PLATFORM: "37.0"
   BUILD_TOOLS: "36.0.0"
 
 jobs:
