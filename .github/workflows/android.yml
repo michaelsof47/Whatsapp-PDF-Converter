@@ -98,23 +98,13 @@ jobs:
             ${{ env.IMAGE }} \
             gradle bundleRelease assembleRelease --no-daemon --stacktrace
 
-      - name: Upload release artifacts
-        if  : startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/bundle/release/*.aab
-
+      # Uploads Release Artifacts
       - name: List release outputs
         if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo "ref=$GITHUB_REF"
-          find app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \) || true
-      
+        run: find app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \)
+
       - name: Upload release artifacts
-        if: startsWith(github.ref, 'refs/tags/v')
+        if  : startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: app-release
@@ -127,6 +117,8 @@ jobs:
         if  : startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          fail_on_unmatched_files: true
           files: |
+            app/build/outputs/apk/debug/*.apk
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
