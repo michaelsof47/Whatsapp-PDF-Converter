@@ -14,9 +14,11 @@ env:
   ANDROID_PLATFORM: "37.0"
   BUILD_TOOLS: "36.0.0"
 
-jobs:
+jobs:   
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps: 
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
