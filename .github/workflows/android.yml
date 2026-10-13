@@ -107,6 +107,22 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
 
+      - name: List release outputs
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          echo "ref=$GITHUB_REF"
+          find app/build/outputs -type f \( -name "*.apk" -o -name "*.aab" \) || true
+      
+      - name: Upload release artifacts
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
       - name: Create GitHub Release
         if  : startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
