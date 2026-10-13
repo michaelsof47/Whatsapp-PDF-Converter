@@ -76,10 +76,6 @@ jobs:
           retention-days   : 14
       
       # Release Version
-      - name: Decode Keystore
-        if  : startsWith(github.ref, 'refs/tags/v')
-        run : echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.jks"
-
       - name: Build signed APK & AAB
         if  : startsWith(github.ref, 'refs/tags/v')
         env :
@@ -91,7 +87,7 @@ jobs:
             -v "$GITHUB_WORKSPACE":/whatsapp-chat-converter \
             -v "$HOME/.gradle":/root/.gradle \
             -v "$RUNNER_TEMP/release.jks":/keystore/release.jks:ro \
-            -e KEYSTORE_PATH=/keystore/release.jks \
+            -e KEYSTORE=/keystore/release.jks \
             -e KEYSTORE_PASSWORD \
             -e KEY_ALIAS \
             -e KEY_PASSWORD \
