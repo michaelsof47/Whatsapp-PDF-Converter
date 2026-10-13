@@ -41,7 +41,7 @@ jobs:
       - name: Gradle cache
         uses: actions/cache@v4
         with:
-          path        : ~/.Gradle
+          path        : ~/.gradle
           key         : gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml', '**/gradle.properties') }}
           restore-keys: gradle-${{ runner.os }}-
       
